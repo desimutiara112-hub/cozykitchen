@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cozy Kitchen - Game Memasak</title>
+    <!-- Menggunakan Tailwind CSS untuk tata letak responsif -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Menggunakan Google Fonts Fredoka & Nunito untuk nuansa hangat & imut -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- Tone.js untuk efek suara memasak tanpa URL eksternal -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <style>
+        /* Pengaturan Font Utama */
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #FDF3E7;
+            background-image: radial-gradient(#E8D5C4 1.5px, transparent 1.5px);
+            background-size: 24px 24px;
+            color: #5C4033;
+            user-select: none;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3, .font-display {
+            font-family: 'Fredoka', sans-serif;
+        }
+
+        /* Palet Warna & Gaya Cozy */
+        .wood-panel {
+            background: linear-gradient(145deg, #D9A066, #C1864B);
+            border: 4px solid #8C5828;
+            box-shadow: 0 8px 0 #73451D, 0 12px 20px rgba(92, 64, 51, 0.25);
+        }
+
+        .cream-card {
+            background-color: #FFFDF9;
+            border: 3px solid #EAD7C3;
+            box-shadow: 0 6px 0 #DFC4A8, 0 10px 15px rgba(92, 64, 51, 0.08);
+        }
+
+        .kitchen-counter {
+            background: repeating-linear-gradient(
+                90deg,
+                #E3B688,
+                #E3B688 40px,
+                #DCAC7C 40px,
+                #DCAC7C 80px
+            );
+            border-top: 6px solid #A87240;
+            box-shadow: inset 0 10px 20px rgba(92, 64, 51, 0.15);
+        }
+
+        /* Animasi & Efek Interaktif */
+        .btn-cozy {
+            transition: all 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 5px 0 rgba(0,0,0,0.2);
+        }
+        .btn-cozy:hover:not(:disabled) {
+            transform: translateY(-2px);
+        }
+        .btn-cozy:active:not(:disabled) {
+            transform: translateY(4px);
+            box-shadow: 0 1px 0 rgba(0,0,0,0.2);
+        }
+        .btn-cozy:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-6px); }
+        }
+        .animate-float {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            70% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .pop-in {
+            animation: popIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+
+        @keyframes steamRise {
+            0% { transform: translateY(0) scale(0.8); opacity: 0; }
+            50% { opacity: 0.7; }
+            100% { transform: translateY(-35px) scale(1.3); opacity: 0; }
+        }
+        .steam {
+            animation: steamRise 2s infinite ease-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-6deg); }
+            75% { transform: rotate(6deg); }
+        }
+        .animate-cook {
+            animation: shake 0.4s infinite ease-in-out;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #F5E6D3;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #C99E76;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Header / Status Bar -->
+    <header class="w-full bg-[#FFF8F0] border-b-4 border-[#E6CEB5] px-4 py-3 shadow-sm sticky top-0 z-30">
+        <div class="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-3">
+            <!-- Logo -->
+            <div class="flex items-center gap-3">
+                <div class="w-11 h-11 rounded-2xl bg-[#FF8B6A] border-2 border-[#D96243] flex items-center justify-center text-2xl shadow-sm">
+                    🍳
+                </div>
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-bold text-[#5C4033] leading-tight">Cozy Kitchen</h1>
+                    <p class="text-xs text-[#8C6D5A] font-semibold">Dapur Hangat & Penuh Cinta</p>
+                </div>
+            </div>
+
+            <!-- Statistik Pemain -->
+            <div class="flex items-center gap-2 sm:gap-4">
+                <div class="bg-[#FFF0D6] border-2 border-[#E8C58E] px-3 py-1.5 rounded-2xl flex items-center gap-1.5">
+                    <span class="text-lg">🪙</span>
+                    <span id="coinDisplay" class="font-bold text-[#8C5828] text-sm sm:text-base">0</span>
+                </div>
+                <div class="bg-[#FFE8EC] border-2 border-[#F2B8C4] px-3 py-1.5 rounded-2xl flex items-center gap-1.5">
+                    <span class="text-lg">⭐</span>
+                    <span id="scoreDisplay" class="font-bold text-[#B84A62] text-sm sm:text-base">0</span>
+                </div>
+                <button id="soundToggleBtn" onclick="toggleSound()" class="btn-cozy bg-[#E8F4EA] border-2 border-[#A8D5B0] text-[#3B7A47] p-2 rounded-2xl text-sm font-bold flex items-center gap-1" title="Suara">
+                    <span id="soundIcon">🔊</span>
+                </button>
+                <button onclick="openRecipeBookModal()" class="btn-cozy bg-[#FF9E7D] border-2 border-[#D97250] text-white px-3 sm:px-4 py-2 rounded-2xl text-xs sm:text-sm font-bold flex items-center gap-1.5">
+                    <span>📖</span> <span class="hidden sm:inline">Buku Resep</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Konten Utama -->
+    <main class="flex-1 max-w-6xl w-full mx-auto p-3 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-5">
+
+        <!-- KOLOM KIRI: Daftar Menu & Pesanan Pelanggan (4 Kolom) -->
+        <section class="lg:col-span-4 flex flex-col gap-4">
+            <!-- Kartu Pelanggan Saat Ini -->
+            <div class="cream-card rounded-3xl p-4 relative overflow-hidden">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="bg-[#FFE3B3] text-[#8C5828] text-xs font-extrabold px-3 py-1 rounded-full uppercase tracking-wider">Pesanan Pelanggan</span>
+                    <span id="orderNumber" class="text-xs font-bold text-[#9E7B66]">#01</span>
+                </div>
+
+                <div class="flex items-center gap-3 bg-[#FFF6EB] p-3 rounded-2xl border-2 border-[#F0DEC8]">
+                    <div id="customerAvatar" class="text-4xl sm:text-5xl animate-float bg-white w-16 h-16 rounded-2xl flex items-center justify-center border-2 border-[#EAD7C3] shadow-sm shrink-0">
+                        🐻
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h3 id="customerName" class="font-bold text-base text-[#5C4033] truncate">Beri Beruang</h3>
+                        <p id="customerDialog" class="text-xs text-[#7A5C49] italic line-clamp-2">"Halo Chef! Aku ingin sesuatu yang hangat..."</p>
+                    </div>
+                </div>
+
+                <!-- Menu yang Dipesan -->
+                <div class="mt-3 bg-[#F7EFE6] rounded-2xl p-3 border-2 border-dashed border-[#D6BEA7] flex items-center justify-between">
+                    <div class="flex items-center gap-2.5">
+                        <span id="orderedDishEmoji" class="text-3xl">🥞</span>
+                        <div>
+                            <p class="text-[11px] font-bold text-[#9E7B66] uppercase">Ingin Memesan:</p>
+                            <h4 id="orderedDishName" class="font-bold text-sm sm:text-base text-[#5C4033]">Pancake Madu Berry</h4>
+                        </div>
+                    </div>
+                    <button onclick="selectMenuById(currentOrder.id)" class="btn-cozy bg-[#7BC47F] border-2 border-[#4E9A52] text-white text-xs font-bold px-3 py-1.5 rounded-xl">
+                        Masak Ini
+                    </button>
+                </div>
+            </div>
+
+            <!-- Daftar Menu Lengkap -->
+            <div class="cream-card rounded-3xl p-4 flex-1 flex flex-col">
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-lg font-bold text-[#5C4033] flex items-center gap-2">
+                        <span>🍽️</span> Daftar Menu
+                    </h2>
+                    <span class="text-xs font-semibold text-[#8C6D5A]">Pilih menu untuk dimasak</span>
+                </div>
+
+                <div id="menuListContainer" class="space-y-2.5 max-h-[340px] lg:max-h-[420px] overflow-y-auto pr-1">
+                    <!-- Item Menu akan di-render lewat JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- KOLOM TENGAH & KANAN: Area Memasak & Cara Membuat (8 Kolom) -->
+        <section class="lg:col-span-8 flex flex-col gap-4">
+
+            <!-- Panduan Cara Membuat (Resep Interaktif) -->
+            <div class="cream-card rounded-3xl p-4 sm:p-5">
+                <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b-2 border-[#F0E1D1]">
+                    <div class="flex items-center gap-3">
+                        <span id="activeMenuEmoji" class="text-3xl sm:text-4xl bg-[#FFF3E0] p-2 rounded-2xl border-2 border-[#EAD2B7]">🥞</span>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h2 id="activeMenuTitle" class="text-lg sm:text-xl font-bold text-[#5C4033]">Pancake Madu Berry</h2>
+                                <span id="activeMenuReward" class="bg-[#FFF0D6] text-[#9C6324] text-xs font-bold px-2.5 py-0.5 rounded-full border border-[#E8C58E]">+50 🪙</span>
+                            </div>
+                            <p id="activeMenuDesc" class="text-xs text-[#8C6D5A]">Kue dadar lembut dengan siraman madu hutan dan buah beri segar.</p>
+                        </div>
+                    </div>
+
+                    <button onclick="resetCookingStation()" class="btn-cozy bg-[#F3E5D8] hover:bg-[#EAD6C3] border-2 border-[#D4B89E] text-[#6E4E3A] text-xs font-bold px-3 py-2 rounded-xl flex items-center gap-1">
+                        <span>🔄</span> Ulangi
+                    </button>
+                </div>
+
+                <!-- Langkah-Langkah Cara Membuat -->
+                <div class="mt-3">
+                    <h3 class="text-xs font-extrabold uppercase tracking-wider text-[#8C6D5A] mb-2 flex items-center gap-1.5">
+                        <span>👩‍🍳</span> Cara Membuat (Ikuti urutan langkah):
+                    </h3>
+                    <div id="stepsContainer" class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                        <!-- Langkah-langkah dirender oleh JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Meja Dapur Utama (Interactive Kitchen Station) -->
+            <div class="wood-panel rounded-3xl p-4 sm:p-6 flex-1 flex flex-col justify-between relative overflow-hidden">
+                <!-- Dekorasi Lampu Gantung Cozy -->
+                <div class="flex justify-around -mt-6 mb-2 pointer-events-none opacity-90">
+                    <div class="flex flex-col items-center">
+                        <div class="w-1 h-4 bg-[#5C4033]"></div>
+                        <div class="w-10 h-5 bg-[#FFD166] rounded-t-full border-2 border-[#B8862D] shadow-md"></div>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <div class="w-1 h-4 bg-[#5C4033]"></div>
+                        <div class="w-10 h-5 bg-[#FFD166] rounded-t-full border-2 border-[#B8862D] shadow-md"></div>
+                    </div>
+                </div>
+
+                <!-- Rak Bahan Makanan (Ingredients Shelf) -->
+                <div class="bg-[#8C5828]/40 rounded-2xl p-3 border-2 border-[#73451D] mb-4">
+                    <p class="text-xs font-bold text-[#FFF5E6] mb-2 flex items-center gap-1.5">
+                        <span>🧺</span> Rak Bahan (Klik bahan sesuai langkah resep):
+                    </p>
+                    <div id="ingredientsShelf" class="flex flex-wrap gap-2 sm:gap-3 justify-center">
+                        <!-- Tombol Bahan dirender oleh JS -->
+                    </div>
+                </div>
+
+                <!-- Area Kompor / Wadah Masak & Meja Penyajian -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center my-auto">
+
+                    <!-- Kiri: Wadah Memasak (Panci / Mangkuk / Wajan) -->
+                    <div class="bg-[#FFF8F0] rounded-3xl p-4 border-4 border-[#EAD2B7] flex flex-col items-center justify-center relative min-h-[210px]">
+                        <span id="stationLabel" class="absolute top-3 left-3 bg-[#FFE3B3] text-[#8C5828] text-[11px] font-extrabold px-2.5 py-0.5 rounded-full">
+                            🍳 Wajan & Mangkuk
+                        </span>
+
+                        <!-- Efek Uap saat Memasak -->
+                        <div id="steamEffect" class="hidden absolute top-6 flex gap-3 text-2xl pointer-events-none">
+                            <span class="steam">♨️</span>
+                            <span class="steam" style="animation-delay: 0.6s">💨</span>
+                        </div>
+
+                        <!-- Visual Wadah & Bahan di Dalamnya -->
+                        <div id="cookingVessel" class="mt-4 w-36 h-28 rounded-b-[3rem] rounded-t-xl bg-[#4A5568] border-4 border-[#2D3748] flex flex-wrap items-center justify-center gap-1 p-2 relative shadow-inner transition-all">
+                            <div id="vesselContents" class="flex flex-wrap items-center justify-center gap-1 text-2xl">
+                                <span class="text-xs text-gray-300 font-semibold">Kosong</span>
+                            </div>
+                            <!-- Gagang Wajan -->
+                            <div class="w-10 h-3 bg-[#2D3748] rounded-r-full absolute -right-10 top-4"></div>
+                        </div>
+
+                        <!-- Progress Bar Memasak -->
+                        <div id="cookProgressContainer" class="w-full max-w-[200px] mt-3 hidden">
+                            <div class="flex justify-between text-[11px] font-bold text-[#8C5828] mb-1">
+                                <span>Memasak...</span>
+                                <span id="cookPercentText">0%</span>
+                            </div>
+                            <div class="w-full h-3 bg-[#EAD7C3] rounded-full overflow-hidden border border-[#C9AD93]">
+                                <div id="cookProgressBar" class="h-full bg-gradient-to-r from-[#FF9E7D] to-[#FF6B6B] w-0 transition-all duration-100"></div>
+                            </div>
+                        </div>
+
+                        <!-- Tombol Aksi Memasak -->
+                        <button id="cookActionBtn" onclick="startCookingProcess()" disabled class="mt-3 btn-cozy bg-[#FF8B6A] border-2 border-[#D96243] text-white font-bold text-sm px-5 py-2 rounded-2xl flex items-center gap-2">
+                            <span>🔥</span> <span id="cookBtnText">Masukkan Bahan Dulu</span>
+                        </button>
+                    </div>
+
+                    <!-- Kanan: Piring Saji (Plating & Serving Station) -->
+                    <div class="bg-[#FFF8F0] rounded-3xl p-4 border-4 border-[#EAD2B7] flex flex-col items-center justify-center relative min-h-[210px]">
+                        <span class="absolute top-3 left-3 bg-[#E3F5E5] text-[#3B7A47] text-[11px] font-extrabold px-2.5 py-0.5 rounded-full">
+                            🍽️ Meja Penyajian
+                        </span>
+
+                        <!-- Piring Saji -->
+                        <div id="servingPlate" class="mt-4 w-36 h-36 rounded-full bg-white border-8 border-[#E2E8F0] shadow-md flex flex-col items-center justify-center relative transition-all">
+                            <div class="w-24 h-24 rounded-full border-2 border-dashed border-[#CBD5E1] flex items-center justify-center">
+                                <span id="platedDishVisual" class="text-5xl transition-all"></span>
+                            </div>
+                        </div>
+
+                        <!-- Tombol Sajikan -->
+                        <button id="serveBtn" onclick="serveDishToCustomer()" disabled class="mt-3 btn-cozy bg-[#6BCB77] border-2 border-[#46A051] text-white font-bold text-sm px-5 py-2 rounded-2xl flex items-center gap-2">
+                            <span>🔔</span> <span>Sajikan ke Pelanggan!</span>
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Notifikasi Toast / Message Box -->
+    <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- Modal Buku Resep Lengkap -->
+    <div id="recipeBookModal" class="fixed inset-0 bg-black/50 backdrop-blur-xs z-40 hidden items-center justify-center p-4">
+        <div class="cream-card rounded-3xl max-w-2xl w-full max-h-[85vh] flex flex-col overflow-hidden pop-in">
+            <div class="bg-[#FF9E7D] px-6 py-4 flex items-center justify-between text-white border-b-4 border-[#D97250]">
+                <h2 class="text-xl font-bold flex items-center gap-2">
+                    <span>📖</span> Buku Resep Cozy Kitchen
+                </h2>
+                <button onclick="closeRecipeBookModal()" class="bg-white/20 hover:bg-white/30 rounded-xl px-3 py-1 font-bold text-sm">
+                    ✕ Tutup
+                </button>
+            </div>
+            <div id="recipeBookContent" class="p-5 overflow-y-auto space-y-4">
+                <!-- Daftar resep lengkap dirender lewat JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Hasil Penyajian (Feedback Pelanggan) -->
+    <div id="serveResultModal" class="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 hidden items-center justify-center p-4">
+        <div class="cream-card rounded-3xl max-w-md w-full p-6 text-center pop-in">
+            <div id="resultCustomerEmoji" class="text-6xl mb-2 animate-float">🐻</div>
+            <h3 id="resultTitle" class="text-2xl font-bold text-[#5C4033] mb-1">Luar Biasa Lezat!</h3>
+            <p id="resultMessage" class="text-sm text-[#7A5C49] mb-4">"Pancake ini sangat lembut dan manis. Terima kasih Chef!"</p>
+
+            <div class="bg-[#FFF6EB] rounded-2xl p-4 border-2 border-[#EAD7C3] mb-5 flex justify-center gap-6">
+                <div>
+                    <p class="text-xs font-bold text-[#9E7B66]">Koin Didapat</p>
+                    <p id="resultCoins" class="text-xl font-extrabold text-[#D9822B]">+50 🪙</p>
+                </div>
+                <div class="w-0.5 bg-[#EAD7C3]"></div>
+                <div>
+                    <p class="text-xs font-bold text-[#9E7B66]">Skor Kepuasan</p>
+                    <p id="resultScore" class="text-xl font-extrabold text-[#D6456B]">+100 ⭐</p>
+                </div>
+            </div>
+
+            <button onclick="nextCustomerOrder()" class="w-full btn-cozy bg-[#6BCB77] border-2 border-[#46A051] text-white font-bold py-3 rounded-2xl text-base">
+                Lanjut Pesanan Berikutnya ➡️
+            </button>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * DATA MENU & RESEP COZY KITCHEN
+         * Berisi daftar menu, bahan-bahan, serta langkah cara membuat yang terstruktur.
+         */
+        const MENU_RECIPES = [
+            {
+                id: 'pancake',
+                name: 'Pancake Madu Berry',
+                emoji: '🥞',
+                category: 'Sarapan Manis',
+                rewardCoins: 50,
+                rewardScore: 100,
+                cookTime: 2000,
+                vesselType: 'Wajan Anti Lengket',
+                description: 'Kue dadar lembut keemasan dengan siraman madu hutan dan stroberi segar.',
+                ingredients: [
+                    { id: 'flour', name: 'Tepung & Telur', emoji: '🥚' },
+                    { id: 'milk', name: 'Susu Segar', emoji: '🥛' },
+                    { id: 'strawberry', name: 'Stroberi & Madu', emoji: '🍓' }
+                ],
+                steps: [
+                    'Campurkan Tepung & Telur ke dalam wadah.',
+                    'Tuangkan Susu Segar lalu aduk merata.',
+                    'Tambahkan Stroberi & Madu, lalu panggang hingga matang!'
+                ]
+            },
+            {
+                id: 'ramen',
+                name: 'Ramen Hangat Spesial',
+                emoji: '🍜',
+                category: 'Hidangan Utama',
+                rewardCoins: 75,
+                rewardScore: 150,
+                cookTime: 2500,
+                vesselType: 'Panci Kuah Kaldu',
+                description: 'Mie kenyal dalam kuah kaldu gurih hangat dengan topping telur rebus dan rumput laut.',
+                ingredients: [
+                    { id: 'noodle', name: 'Mie Keriting', emoji: '🍝' },
+                    { id: 'broth', name: 'Kaldu Gurih', emoji: '🍲' },
+                    { id: 'egg', name: 'Telur & Sayur', emoji: '🥬' }
+                ],
+                steps: [
+                    'Rebus Mie Keriting di dalam panci.',
+                    'Tuangkan Kaldu Gurih kaya rempah.',
+                    'Beri topping Telur & Sayur, masak hingga mendidih!'
+                ]
+            },
+            {
+                id: 'matcha_latte',
+                name: 'Cozy Matcha Latte',
+                emoji: '🍵',
+                category: 'Minuman Hangat',
+                rewardCoins: 40,
+                rewardScore: 80,
+                cookTime: 1500,
+                vesselType: 'Teko Pemanas',
+                description: 'Teh hijau Jepang pilihan yang dikocok lembut dengan susu hangat berbusa.',
+                ingredients: [
+                    { id: 'matcha', name: 'Bubuk Matcha', emoji: '🍃' },
+                    { id: 'milk', name: 'Susu Hangat', emoji: '🥛' },
+                    { id: 'sugar', name: 'Gula Aren', emoji: '🍯' }
+                ],
+                steps: [
+                    'Masukkan Bubuk Matcha murni.',
+                    'Tuangkan Susu Hangat perlahan.',
+                    'Tambahkan Gula Aren dan seduh hingga harum!'
+                ]
+            },
+            {
+                id: 'curry_rice',
+                name: 'Nasi Kari Jepang',
+                emoji: '🍛',
+                category: 'Hidangan Utama',
+                rewardCoins: 85,
+                rewardScore: 170,
+                cookTime: 2800,
+                vesselType: 'Panci Rebus',
+                description: 'Nasi pulen hangat disiram saus kari kental dengan potongan kentang dan wortel.',
+                ingredients: [
+                    { id: 'rice', name: 'Nasi Hangat', emoji: '🍚' },
+                    { id: 'veggie', name: 'Wortel & Kentang', emoji: '🥕' },
+                    { id: 'curry', name: 'Bumbu Kari', emoji: '🧆' }
+                ],
+                steps: [
+                    'Siapkan porsi Nasi Hangat pulen.',
+                    'Masukkan potongan Wortel & Kentang.',
+                    'Tuang Bumbu Kari dan masak hingga mengental!'
+                ]
+            },
+            {
+                id: 'strawberry_cake',
+                name: 'Kue Tart Stroberi',
+                emoji: '🍰',
+                category: 'Pencuci Mulut',
+                rewardCoins: 65,
+                rewardScore: 130,
+                cookTime: 2200,
+                vesselType: 'Oven Kue Cozy',
+                description: 'Bolu spons lembut berlapis krim kocok vanilla dan buah stroberi manis.',
+                ingredients: [
+                    { id: 'flour', name: 'Adonan Bolu', emoji: '🥣' },
+                    { id: 'cream', name: 'Krim Vanilla', emoji: '🍦' },
+                    { id: 'strawberry', name: 'Stroberi Segar', emoji: '🍓' }
+                ],
+                steps: [
+                    'Siapkan Adonan Bolu lembut.',
+                    'Oleskan lapisan Krim Vanilla manis.',
+                    'Hias dengan Stroberi Segar dan panggang!'
+                ]
+            }
+        ];
+
+        // Daftar Karakter Pelanggan Lucu
+        const CUSTOMERS = [
+            { name: 'Beri Beruang', avatar: '🐻', greeting: 'Halo Chef! Perutku keroncongan, boleh buatkan pesanan ini?' },
+            { name: 'Mimi Kucing', avatar: '🐱', greeting: 'Meow~ Aroma dapurmu harum sekali! Aku mau pesan ini ya.' },
+            { name: 'Pipi Kelinci', avatar: '🐰', greeting: 'Selamat sore! Aku habis jalan-jalan dan butuh makanan enak.' },
+            { name: 'Koko Rubah', avatar: '🦊', greeting: 'Wah, tempat ini sangat nyaman! Tolong buatkan menu favoritku.' },
+            { name: 'Piko Panda', avatar: '🐼', greeting: 'Halo! Aku dengar masakan di Cozy Kitchen paling juara!' }
+        ];
+
+        // Semua bahan yang tersedia di rak dapur
+        const ALL_PANTRY_INGREDIENTS = [
+            { id: 'flour', name: 'Tepung/Adonan', emoji: '🥚' },
+            { id: 'milk', name: 'Susu Segar', emoji: '🥛' },
+            { id: 'strawberry', name: 'Stroberi', emoji: '🍓' },
+            { id: 'noodle', name: 'Mie Keriting', emoji: '🍝' },
+            { id: 'broth', name: 'Kaldu Gurih', emoji: '🍲' },
+            { id: 'egg', name: 'Telur & Sayur', emoji: '🥬' },
+            { id: 'matcha', name: 'Bubuk Matcha', emoji: '🍃' },
+            { id: 'sugar', name: 'Gula Aren', emoji: '🍯' },
+            { id: 'rice', name: 'Nasi Hangat', emoji: '🍚' },
+            { id: 'veggie', name: 'Wortel & Kentang', emoji: '🥕' },
+            { id: 'curry', name: 'Bumbu Kari', emoji: '🧆' },
+            { id: 'cream', name: 'Krim Vanilla', emoji: '🍦' }
+        ];
+
+        /**
+         * STATE PERMAINAN
+         */
+        let gameState = {
+            coins: 0,
+            score: 0,
+            orderCount: 1,
+            soundEnabled: true,
+            selectedMenu: MENU_RECIPES[0],
+            currentCustomer: CUSTOMERS[0],
+            currentOrder: MENU_RECIPES[0],
+            addedIngredients: [],
+            isCooking: false,
+            isCooked: false,
+            isPlated: false
+        };
+
+        /**
+         * SISTEM AUDIO (Tone.js)
+         * Menghasilkan efek suara ceria tanpa memerlukan file audio eksternal
+         */
+        let synth = null;
+        function initAudio() {
+            if (!synth && typeof Tone !== 'undefined') {
+                synth = new Tone.PolySynth(Tone.Synth).toDestination();
+                synth.volume.value = -8;
+            }
+        }
+
+        function playSound(type) {
+            if (!gameState.soundEnabled) return;
+            try {
+                initAudio();
+                if (Tone.context.state !== 'running') {
+                    Tone.start();
+                }
+                const now = Tone.now();
+                if (type === 'pop') {
+                    synth.triggerAttackRelease('C5', '16n', now);
+                } else if (type === 'error') {
+                    synth.triggerAttackRelease(['E3', 'Eb3'], '8n', now);
+                } else if (type === 'cookDone') {
+                    synth.triggerAttackRelease(['C5', 'E5', 'G5'], '8n', now);
+                } else if (type === 'serve') {
+                    synth.triggerAttackRelease(['C5', 'E5', 'G5', 'C6'], '4n', now);
+                }
+            } catch (e) {
+                // Abaikan jika browser memblokir audio sebelum interaksi
+            }
+        }
+
+        function toggleSound() {
+            gameState.soundEnabled = !gameState.soundEnabled;
+            document.getElementById('soundIcon').textContent = gameState.soundEnabled ? '🔊' : '🔇';
+            showToast(gameState.soundEnabled ? 'Efek suara diaktifkan' : 'Efek suara dimatikan', 'info');
+        }
+
+        /**
+         * INISIALISASI HALAMAN
+         */
+        window.onload = function() {
+            renderMenuList();
+            renderIngredientsShelf();
+            renderRecipeBook();
+            generateNewCustomerOrder(true);
+            selectMenuById(gameState.currentOrder.id);
+        };
+
+        /**
+         * RENDER DAFTAR MENU DI PANEL KIRI
+         */
+        function renderMenuList() {
+            const container = document.getElementById('menuListContainer');
+            container.innerHTML = '';
+
+            MENU_RECIPES.forEach(menu => {
+                const isSelected = gameState.selectedMenu.id === menu.id;
+                const isOrdered = gameState.currentOrder.id === menu.id;
+
+                const card = document.createElement('div');
+                card.onclick = () => selectMenuById(menu.id);
+                card.className = `cursor-pointer p-3 rounded-2xl border-2 transition-all flex items-center justify-between gap-2 ${
+                    isSelected
+                        ? 'bg-[#FFF0DC] border-[#E08E45] shadow-sm scale-[1.01]'
+                        : 'bg-white hover:bg-[#FFF9F2] border-[#EAD7C3]'
+                }`;
+
+                card.innerHTML = `
+                    <div class="flex items-center gap-3 min-w-0">
+                        <div class="text-3xl bg-[#FFF6EB] w-12 h-12 rounded-xl flex items-center justify-center border border-[#EAD7C3] shrink-0">
+                            ${menu.emoji}
+                        </div>
+                        <div class="min-w-0">
+                            <div class="flex items-center gap-1.5">
+                                <h4 class="font-bold text-sm text-[#5C4033] truncate">${menu.name}</h4>
+                                ${isOrdered ? '<span class="bg-[#FF6B6B] text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full shrink-0">Pesanan!</span>' : ''}
+                            </div>
+                            <p class="text-[11px] text-[#8C6D5A] truncate">${menu.category} • +${menu.rewardCoins} 🪙</p>
+                        </div>
+                    </div>
+                    <span class="text-xs font-bold text-[#B87A3D] bg-[#FFF3E0] px-2.5 py-1 rounded-xl shrink-0">
+                        Pilih
+                    </span>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        /**
+         * MEMILIH MENU UNTUK DIMASAK
+         */
+        function selectMenuById(menuId) {
+            if (gameState.isCooking) {
+                showToast('Tunggu proses memasak selesai dulu ya!', 'warning');
+                return;
+            }
+            const found = MENU_RECIPES.find(m => m.id === menuId);
+            if (!found) return;
+
+            gameState.selectedMenu = found;
+            playSound('pop');
+            resetCookingStation(false);
+            updateRecipeUI();
+            renderMenuList();
+        }
+
+        /**
+         * MEMPERBARUI TAMPILAN CARA MEMBUAT (LANGKAH-LANGKAH)
+         */
+        function updateRecipeUI() {
+            const menu = gameState.selectedMenu;
+            document.getElementById('activeMenuEmoji').textContent = menu.emoji;
+            document.getElementById('activeMenuTitle').textContent = menu.name;
+            document.getElementById('activeMenuReward').textContent = `+${menu.rewardCoins} 🪙`;
+            document.getElementById('activeMenuDesc').textContent = menu.description;
+            document.getElementById('stationLabel').textContent = `🍳 ${menu.vesselType}`;
+
+            const stepsContainer = document.getElementById('stepsContainer');
+            stepsContainer.innerHTML = '';
+
+            menu.steps.forEach((stepText, index) => {
+                const isDone = gameState.addedIngredients.length > index || gameState.isCooked;
+                const isCurrent = gameState.addedIngredients.length === index && !gameState.isCooked;
+                const reqIng = menu.ingredients[index];
+
+                const stepCard = document.createElement('div');
+                stepCard.className = `p-3 rounded-2xl border-2 transition-all flex flex-col justify-between ${
+                    isDone
+                        ? 'bg-[#E8F8EA] border-[#82C98A] text-[#2F6B37]'
+                        : isCurrent
+                            ? 'bg-[#FFF5E4] border-[#F0A848] shadow-xs'
+                            : 'bg-[#F9F4EE] border-[#E6D5C3] opacity-75'
+                }`;
+
+                stepCard.innerHTML = `
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-[11px] font-extrabold uppercase px-2 py-0.5 rounded-full ${
+                            isDone ? 'bg-[#6BCB77] text-white' : 'bg-[#EAD7C3] text-[#5C4033]'
+                        }">
+                            Langkah ${index + 1} ${isDone ? '✓' : ''}
+                        </span>
+                        <span class="text-lg" title="${reqIng.name}">${reqIng.emoji}</span>
+                    </div>
+                    <p class="text-xs font-semibold leading-snug">${stepText}</p>
+                `;
+                stepsContainer.appendChild(stepCard);
+            });
+        }
+
+        /**
+         * RENDER RAK BAHAN MAKANAN
+         */
+        function renderIngredientsShelf() {
+            const shelf = document.getElementById('ingredientsShelf');
+            shelf.innerHTML = '';
+
+            ALL_PANTRY_INGREDIENTS.forEach(ing => {
+                const btn = document.createElement('button');
+                btn.onclick = () => addIngredientToVessel(ing);
+                btn.className = 'btn-cozy bg-[#FFFDF9] hover:bg-[#FFF2DF] border-2 border-[#D9B896] px-3 py-2 rounded-2xl flex items-center gap-1.5 text-xs sm:text-sm font-bold text-[#5C4033]';
+                btn.innerHTML = `
+                    <span class="text-lg sm:text-xl">${ing.emoji}</span>
+                    <span>${ing.name}</span>
+                `;
+                shelf.appendChild(btn);
+            });
+        }
+
+        /**
+         * MENAMBAHKAN BAHAN KE WADAH MEMASAK
+         */
+        function addIngredientToVessel(ingredient) {
+            if (gameState.isCooking) {
+                showToast('Sedang memasak, jangan dibuka dulu!', 'warning');
+                return;
+            }
+            if (gameState.isCooked || gameState.isPlated) {
+                showToast('Masakan sudah jadi! Sajikan dulu atau klik Ulangi.', 'info');
+                return;
+            }
+
+            const recipe = gameState.selectedMenu;
+            const currentStepIndex = gameState.addedIngredients.length;
+
+            if (currentStepIndex >= recipe.ingredients.length) {
+                showToast('Semua bahan sudah lengkap! Klik tombol Masak.', 'info');
+                return;
+            }
+
+            const expectedIngredient = recipe.ingredients[currentStepIndex];
+
+            // Validasi apakah bahan sesuai dengan urutan langkah resep
+            if (ingredient.id === expectedIngredient.id) {
+                gameState.addedIngredients.push(ingredient);
+                playSound('pop');
+                updateVesselVisual();
+                updateRecipeUI();
+
+                if (gameState.addedIngredients.length === recipe.ingredients.length) {
+                    const cookBtn = document.getElementById('cookActionBtn');
+                    cookBtn.disabled = false;
+                    document.getElementById('cookBtnText').textContent = 'Mulai Masak!';
+                    showToast('Bahan lengkap! Sekarang klik Mulai Masak 🔥', 'success');
+                } else {
+                    showToast(`Berhasil menambahkan ${ingredient.name}!`, 'success');
+                }
+            } else {
+                playSound('error');
+                showToast(`Ups! Langkah berikutnya butuh ${expectedIngredient.name} (${expectedIngredient.emoji})`, 'error');
+            }
+        }
+
+        /**
+         * MEMPERBARUI VISUAL ISI WAJAN/PANCI
+         */
+        function updateVesselVisual() {
+            const container = document.getElementById('vesselContents');
+            if (gameState.addedIngredients.length === 0) {
+                container.innerHTML = '<span class="text-xs text-gray-300 font-semibold">Kosong</span>';
+                return;
+            }
+
+            container.innerHTML = '';
+            gameState.addedIngredients.forEach(ing => {
+                const span = document.createElement('span');
+                span.className = 'text-3xl pop-in';
+                span.textContent = ing.emoji;
+                container.appendChild(span);
+            });
+        }
+
+        /**
+         * PROSES MEMASAK (ANIMASI & PROGRESS BAR)
+         */
+        function startCookingProcess() {
+            if (gameState.isCooking || gameState.addedIngredients.length < gameState.selectedMenu.ingredients.length) return;
+
+            gameState.isCooking = true;
+            playSound('pop');
+
+            const cookBtn = document.getElementById('cookActionBtn');
+            const vessel = document.getElementById('cookingVessel');
+            const steam = document.getElementById('steamEffect');
+            const progressContainer = document.getElementById('cookProgressContainer');
+            const progressBar = document.getElementById('cookProgressBar');
+            const percentText = document.getElementById('cookPercentText');
+
+            cookBtn.disabled = true;
+            document.getElementById('cookBtnText').textContent = 'Sedang Dimasak...';
+            vessel.classList.add('animate-cook');
+            steam.classList.remove('hidden');
+            progressContainer.classList.remove('hidden');
+
+            const duration = gameState.selectedMenu.cookTime;
+            const intervalTime = 50;
+            let elapsed = 0;
+
+            const timer = setInterval(() => {
+                elapsed += intervalTime;
+                const percent = Math.min(100, Math.round((elapsed / duration) * 100));
+                progressBar.style.width = `${percent}%`;
+                percentText.textContent = `${percent}%`;
+
+                if (elapsed >= duration) {
+                    clearInterval(timer);
+                    finishCooking();
+                }
+            }, intervalTime);
+        }
+
+        /**
+         * SELESAI MEMASAK -> PINDAH KE PIRING SAJI (PLATING)
+         */
+        function finishCooking() {
+            gameState.isCooking = false;
+            gameState.isCooked = true;
+            gameState.isPlated = true;
+
+            playSound('cookDone');
+
+            const vessel = document.getElementById('cookingVessel');
+            const steam = document.getElementById('steamEffect');
+            const progressContainer = document.getElementById('cookProgressContainer');
+
+            vessel.classList.remove('animate-cook');
+            steam.classList.add('hidden');
+            progressContainer.classList.add('hidden');
+
+            // Kosongkan wajan dan pindahkan hasil masakan ke piring saji
+            document.getElementById('vesselContents').innerHTML = '<span class="text-xs text-green-300 font-bold">Matang! ✨</span>';
+            document.getElementById('cookBtnText').textContent = 'Sudah Matang!';
+
+            const platedVisual = document.getElementById('platedDishVisual');
+            platedVisual.textContent = gameState.selectedMenu.emoji;
+            platedVisual.classList.add('pop-in');
+
+            const serveBtn = document.getElementById('serveBtn');
+            serveBtn.disabled = false;
+
+            updateRecipeUI();
+            showToast(`${gameState.selectedMenu.name} siap disajikan di piring! 🍽️`, 'success');
+        }
+
+        /**
+         * MENYAJIKAN MASAKAN KE PELANGGAN
+         */
+        function serveDishToCustomer() {
+            if (!gameState.isPlated) return;
+
+            playSound('serve');
+
+            const cookedDish = gameState.selectedMenu;
+            const orderedDish = gameState.currentOrder;
+            const isExactMatch = cookedDish.id === orderedDish.id;
+
+            // Hitung hadiah koin & skor
+            const earnedCoins = isExactMatch ? cookedDish.rewardCoins : Math.round(cookedDish.rewardCoins * 0.6);
+            const earnedScore = isExactMatch ? cookedDish.rewardScore : Math.round(cookedDish.rewardScore * 0.5);
+
+            gameState.coins += earnedCoins;
+            gameState.score += earnedScore;
+
+            document.getElementById('coinDisplay').textContent = gameState.coins;
+            document.getElementById('scoreDisplay').textContent = gameState.score;
+
+            // Tampilkan Modal Hasil
+            document.getElementById('resultCustomerEmoji').textContent = gameState.currentCustomer.avatar;
+            if (isExactMatch) {
+                document.getElementById('resultTitle').textContent = 'Pesanan Sempurna! 🎉';
+                document.getElementById('resultMessage').textContent = `"Wah, ${cookedDish.name} ini persis seperti yang aku inginkan! Rasanya luar biasa!"`;
+            } else {
+                document.getElementById('resultTitle').textContent = 'Tetap Enak, Meski Beda! 😊';
+                document.getElementById('resultMessage').textContent = `"Sebenarnya aku memesan ${orderedDish.name}, tapi ${cookedDish.name} buatanmu juga enak kok!"`;
+            }
+
+            document.getElementById('resultCoins').textContent = `+${earnedCoins} 🪙`;
+            document.getElementById('resultScore').textContent = `+${earnedScore} ⭐`;
+
+            const modal = document.getElementById('serveResultModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        /**
+         * LANJUT KE PELANGGAN BERIKUTNYA
+         */
+        function nextCustomerOrder() {
+            const modal = document.getElementById('serveResultModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+
+            gameState.orderCount++;
+            generateNewCustomerOrder(false);
+            selectMenuById(gameState.currentOrder.id);
+        }
+
+        /**
+         * MEMBUAT PESANAN PELANGGAN BARU SECARA ACAK
+         */
+        function generateNewCustomerOrder(isFirst) {
+            const randomCustomer = isFirst
+                ? CUSTOMERS[0]
+                : CUSTOMERS[Math.floor(Math.random() * CUSTOMERS.length)];
+
+            const randomMenu = isFirst
+                ? MENU_RECIPES[0]
+                : MENU_RECIPES[Math.floor(Math.random() * MENU_RECIPES.length)];
+
+            gameState.currentCustomer = randomCustomer;
+            gameState.currentOrder = randomMenu;
+
+            document.getElementById('orderNumber').textContent = `#${String(gameState.orderCount).padStart(2, '0')}`;
+            document.getElementById('customerAvatar').textContent = randomCustomer.avatar;
+            document.getElementById('customerName').textContent = randomCustomer.name;
+            document.getElementById('customerDialog').textContent = `"${randomCustomer.greeting}"`;
+            document.getElementById('orderedDishEmoji').textContent = randomMenu.emoji;
+            document.getElementById('orderedDishName').textContent = randomMenu.name;
+
+            renderMenuList();
+        }
+
+        /**
+         * MERESET MEJA MEMASAK
+         */
+        function resetCookingStation(notify = true) {
+            if (gameState.isCooking) return;
+
+            gameState.addedIngredients = [];
+            gameState.isCooked = false;
+            gameState.isPlated = false;
+
+            updateVesselVisual();
+            updateRecipeUI();
+
+            const cookBtn = document.getElementById('cookActionBtn');
+            cookBtn.disabled = true;
+            document.getElementById('cookBtnText').textContent = 'Masukkan Bahan Dulu';
+
+            const platedVisual = document.getElementById('platedDishVisual');
+            platedVisual.textContent = '';
+            platedVisual.classList.remove('pop-in');
+
+            document.getElementById('serveBtn').disabled = true;
+
+            if (notify) {
+                playSound('pop');
+                showToast('Meja dapur telah dibersihkan!', 'info');
+            }
+        }
+
+        /**
+         * BUKU RESEP MODAL
+         */
+        function renderRecipeBook() {
+            const container = document.getElementById('recipeBookContent');
+            container.innerHTML = '';
+
+            MENU_RECIPES.forEach(menu => {
+                const item = document.createElement('div');
+                item.className = 'bg-white p-4 rounded-2xl border-2 border-[#EAD7C3] flex flex-col sm:flex-row gap-4 items-start';
+                item.innerHTML = `
+                    <div class="text-5xl bg-[#FFF6EB] w-20 h-20 rounded-2xl flex items-center justify-center border-2 border-[#EAD7C3] shrink-0">
+                        ${menu.emoji}
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex flex-wrap items-center justify-between gap-2 mb-1">
+                            <h3 class="font-bold text-lg text-[#5C4033]">${menu.name}</h3>
+                            <span class="bg-[#FFF0D6] text-[#9C6324] text-xs font-bold px-2.5 py-1 rounded-full">Hadiah: ${menu.rewardCoins} 🪙</span>
+                        </div>
+                        <p class="text-xs text-[#8C6D5A] mb-2">${menu.description}</p>
+                        <div class="bg-[#FAF3EB] p-2.5 rounded-xl border border-[#EAD7C3]">
+                            <p class="text-[11px] font-extrabold text-[#5C4033] mb-1">Bahan & Urutan Memasak:</p>
+                            <ol class="list-decimal list-inside text-xs text-[#6E4E3A] space-y-0.5">
+                                ${menu.steps.map((s, idx) => `<li>${menu.ingredients[idx].emoji} ${s}</li>`).join('')}
+                            </ol>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function openRecipeBookModal() {
+            playSound('pop');
+            const modal = document.getElementById('recipeBookModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeRecipeBookModal() {
+            playSound('pop');
+            const modal = document.getElementById('recipeBookModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        /**
+         * SISTEM NOTIFIKASI TOAST (PENGGANTI ALERT)
+         */
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+
+            let colors = 'bg-[#5C4033] text-white border-[#3D2920]';
+            if (type === 'success') colors = 'bg-[#4E9A52] text-white border-[#357038]';
+            if (type === 'error') colors = 'bg-[#D9534F] text-white border-[#A83834]';
+            if (type === 'warning') colors = 'bg-[#E08E45] text-white border-[#B36B2B]';
+
+            toast.className = `${colors} border-2 px-4 py-2.5 rounded-2xl shadow-lg text-xs sm:text-sm font-bold pop-in max-w-xs`;
+            toast.textContent = message;
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(10px)';
+                toast.style.transition = 'all 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 2600);
+        }
+    </script>
+</body>
+</html>
